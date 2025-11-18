@@ -30,7 +30,10 @@ NT101.Q13-PlayfairAndRSA/
 │ ├── main_menu.py         # menu
 │ ├── history_screen.py    # màn hình lịch sử
 │ ├── playfair_screen.py   # màn hình playfair
-│ └── rsa_screen.py        # màn hình rsa
+│ ├── rsa_screen.py        # màn hình rsa
+│ └── visuals/             # trực quan hóa thuật toán
+│       ├── playfair_visual.py
+│       └── rsa_visual.py
 │
 ├── tests/                 # Thư mục kiểm thử (unit test)
 │ ├── test_playfair.py     # Test các hàm PlayFair có chạy đúng không
@@ -38,6 +41,13 @@ NT101.Q13-PlayfairAndRSA/
 │
 ├── data/                  # Thư mục lưu file đầu vào/ra
 │ └── history.json         # lưu lịch sử mã hóa/giải mã
+│
+├── resources/             # Lưu icon, ảnh minh họa
+│   ├── icons/
+│   └── images/
+│
+├── config/                # cấu hình mặc định
+│   └── settings.json
 │
 └── README.md              # Hướng dẫn cài đặt, chạy ứng dụng, mô tả tính năng
 ```
