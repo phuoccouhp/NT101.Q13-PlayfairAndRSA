@@ -183,7 +183,7 @@ class MainMenu(Frame):
 
         class_label = Label(
             top_panel,
-            text="Mã Lớp:  NT101.Q13 - Nhóm 13",
+            text="Mã Lớp:  NT101.Q13 - Nhóm 2",
             bg="white",
             fg="#111",
             font=("Times New Roman", 14, "italic")
