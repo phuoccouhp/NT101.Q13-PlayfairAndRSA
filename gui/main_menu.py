@@ -237,8 +237,26 @@ class MainMenu(Frame):
             btn.pack(fill=BOTH, expand=True, padx=6, pady=6)
             return card
 
-        create_small_feature(features_box, "PlayFair", "", self.show_playfair, ).pack(pady=(40,20), padx=30, expand=True)
-        create_small_feature(features_box, "RSA", "", self.show_rsa, ).pack(pady=(20,40), padx=30, expand=True)
+        # Spacer trên
+        Frame(features_box, bg="white").pack(fill=BOTH, expand=True)
+
+        # Nút PlayFair
+        create_small_feature(features_box, "PlayFair", "", self.show_playfair).pack(
+            pady=8, padx=30
+        )
+
+        # Spacer giữa (giảm khoảng cách)
+        Frame(features_box, bg="white", height=40).pack(fill=X)
+
+        # Nút RSA
+        create_small_feature(features_box, "RSA", "", self.show_rsa).pack(
+            pady=8, padx=30
+        )
+
+        # Spacer dưới
+        Frame(features_box, bg="white").pack(fill=BOTH, expand=True)
+
+
         # create_small_feature(features_box, "History", "", self.show_history)
 
 
