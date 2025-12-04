@@ -60,10 +60,10 @@ class HistoryScreen(Frame):
         btn_style = {
             "width": 18,
             "height": 1,
-            "bg": "#e74c3c",        # màu đỏ nổi bật
+            "bg": "#d32f2f",        # màu đỏ nổi bật
             "fg": "white",           # chữ màu trắng
             "font": ("Segoe UI", 10, "bold"),
-            "activebackground": "#c0392b",  # khi nhấn nút
+            "activebackground": "#d32f2f",  # khi nhấn nút
             "activeforeground": "white",
             "bd": 0,
             "relief": "raised"
@@ -80,7 +80,6 @@ class HistoryScreen(Frame):
 
     # ===== Hàm load lịch sử =====
     def load_history(self):
-        """Đọc dữ liệu từ file history.json và hiển thị"""
         self.tree.delete(*self.tree.get_children())
         history_file = os.path.join("data", "history.json")
         if not os.path.exists(history_file):
@@ -162,7 +161,7 @@ class HistoryScreen(Frame):
         btn_frame = Frame(confirm, bg="#d9d9d9")
         btn_frame.pack(pady=(0,15))
 
-        Button(btn_frame, text="Có", width=10, command=lambda:[self._delete_all(confirm)], bg="#e74c3c", fg="white", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
+        Button(btn_frame, text="Có", width=10, command=lambda:[self._delete_all(confirm)], bg="#d32f2f", fg="white", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
         Button(btn_frame, text="Không", width=10, command=confirm.destroy, bg="#3498db", fg="white", font=("Segoe UI", 10, "bold")).pack(side=LEFT, padx=5)
 
     # Thực sự xóa tất cả và đóng popup

@@ -154,16 +154,13 @@ class MainMenu(Frame):
         sidebar.add_button("RSA", self.show_rsa)
         sidebar.add_button("History", self.show_history)
 
-        # Main content placeholder
         self.content = Frame(self, bg="#d9d9d9")
         self.content.pack(side=LEFT, fill=BOTH, expand=True)
 
-        # Hiển thị màn hình mặc định
         self.show_home()
 
     # ------------------ Clear Content ------------------
     def clear_content(self):
-        """Xóa toàn bộ widget trong vùng nội dung chính."""
         for widget in self.content.winfo_children():
             widget.destroy()
 
@@ -171,116 +168,78 @@ class MainMenu(Frame):
     def show_home(self):
         self.clear_content()
 
-        # ===== Title =====
+        top_panel = Frame(self.content, bg="white", bd=1, relief=GROOVE)
+        top_panel.pack(fill=X, padx=20, pady=(20, 10))
+
         title = Label(
-            self.content,
-            text="Cryptography Toolkit",
-            bg="#d9d9d9",
+            top_panel,
+            text="MÔN HỌC:\nAN TOÀN MẠNG MÁY TÍNH",
+            bg="white",
             fg="#111",
-            font=("Segoe UI", 26, "bold")
+            font=("Times New Roman", 24, "bold"),
+            justify=CENTER
         )
-        title.pack(pady=(25, 8))
+        title.pack(pady=(18, 6))
 
-        subtitle = Label(
-            self.content,
-            text=("Một công cụ mã hóa và giải mã các thuật toán mã hóa cổ điển & hiện đại. \n" 
-            "Cryptography Toolkit – Mã hóa thông minh, giải mã tức thì, lưu giữ lịch sử chi tiết và bảo vệ mọi dữ liệu quan trọng của bạn. \n"
-            "Tất cả trong một ứng dụng trực quan giúp bạn kiểm soát thông tin mọi lúc, mọi nơi"),
-            bg="#d9d9d9",
-            fg="#444",
-            font=("Segoe UI", 12)
+        class_label = Label(
+            top_panel,
+            text="Mã Lớp:  NT101.Q13 - Nhóm 13",
+            bg="white",
+            fg="#111",
+            font=("Times New Roman", 14, "italic")
         )
-        subtitle.pack()
+        class_label.pack(pady=(0, 12))
 
-        # ===== Feature Wrapper =====
-        wrapper = Frame(self.content, bg="#d9d9d9")
-        wrapper.pack(pady=40)
+        topic_frame = Frame(top_panel, bg="white")
+        topic_frame.pack(fill=X, padx=18, pady=(0, 18))
+        topic_label_title = Label(topic_frame, text="Đề tài:", bg="white", fg="#111", font=("Segoe UI", 12, "bold"))
+        topic_label_title.grid(row=0, column=0, sticky=W)
+        topic_label = Label(topic_frame, text="Viết ứng dụng mô phỏng các giải thuật mã hóa Playfair và RSA", bg="white", fg="#111", font=("Segoe UI", 12, "italic"))
+        topic_label.grid(row=0, column=1, sticky=W, padx=(8,0))
 
-        # ===== Function to create modern card =====
-        def create_modern_card(parent, title, desc, command):
-            card = Frame(
-                parent,
-                bg="white",
-                width=230,
-                height=160,
-                highlightthickness=1,
-                highlightbackground="#cfcfcf"
-            )
+        lower_panel = Frame(self.content, bg="#d9d9d9")
+        lower_panel.pack(fill=BOTH, expand=True, padx=20, pady=(6,20))
+
+        info_card = Frame(lower_panel, bg="white", bd=1, relief=GROOVE)
+        info_card.pack(side=LEFT, fill=BOTH, expand=True, padx=(0,12), pady=6)
+        info_inner = Frame(info_card, bg="white")
+        info_inner.pack(padx=20, pady=20, fill=BOTH, expand=True)
+
+        gv_label = Label(info_inner, text="GVHD: ThS. Tô Nguyễn Nhật Quang", bg="white", fg="#111", font=("Segoe UI", 18, "bold"))
+        gv_label.grid(row=0, column=0, sticky=W)
+
+        sv_label = Label(info_inner, text="Sinh viên thực hiện:", bg="white", fg="#111", font=("Segoe UI", 16, "bold"))
+        sv_label.grid(row=1, column=0, sticky=W, pady=(12,0))
+
+        students_frame = Frame(info_inner, bg="white")
+        students_frame.grid(row=2, column=0, columnspan=2, sticky=W, pady=(8,0))
+        students = [
+            "23521549 - Huỳnh Ngọc Thuận",
+            "23521823 - Nguyễn Quốc Vương",
+            "23521228 - Bùi Lê Huy Phước"
+        ]
+        for i, s in enumerate(students):
+            Label(students_frame, text=s, bg="white", fg="#111", font=("Segoe UI", 14)).pack(anchor=W)
+
+        features_panel = Frame(lower_panel, bg="#d9d9d9", width=260)
+        features_panel.pack(side=RIGHT, fill=Y, pady=6)
+        features_panel.pack_propagate(False)
+
+        features_box = Frame(features_panel, bg="white", bd=1, relief=GROOVE)
+        features_box.place(relx=0.5, rely=0.5, anchor=CENTER, relwidth=0.9, relheight=0.9)
+
+        def create_small_feature(parent, title, desc, command):
+            card = Frame(parent, bg="white", width=200, height=60, highlightthickness=1, highlightbackground="#cfcfcf")
             card.pack_propagate(False)
+            card.pack(pady=30, padx=30)
 
-            # Hover effect
-            def on_enter(e):
-                card.config(highlightbackground="#7a7a7a", bg="#fafafa")
-
-            def on_leave(e):
-                card.config(highlightbackground="#cfcfcf", bg="white")
-
-            card.bind("<Enter>", on_enter)
-            card.bind("<Leave>", on_leave)
-
-            # Title
-            Label(
-                card,
-                text=title,
-                font=("Segoe UI", 13, "bold"),
-                fg="#1a1a1a",
-                bg="white"
-            ).pack(pady=(15, 5))
-
-            # Description
-            Label(
-                card,
-                text=desc,
-                font=("Segoe UI", 10),
-                fg="#555",
-                wraplength=180,
-                justify="center",
-                bg="white"
-            ).pack(pady=(0, 10))
-
-            # ===== Plus button =====
-            plus_btn = Label(
-                card,
-                text="+",
-                font=("Segoe UI", 26, "bold"),
-                fg="#333",
-                bg="white",
-                cursor="hand2"
-            )
-            plus_btn.pack()
-
-            plus_btn.bind("<Enter>", lambda e: plus_btn.config(fg="#000"))
-            plus_btn.bind("<Leave>", lambda e: plus_btn.config(fg="#333"))
-            plus_btn.bind("<Button-1>", lambda e: command())
-
+            btn = Button(card, text=title, command=command, font=("Segoe UI", 12, "bold"))
+            btn.pack(fill=BOTH, expand=True, padx=6, pady=6)
             return card
 
-        # ===== Cards Layout =====
-        row = Frame(wrapper, bg="#d9d9d9")
-        row.pack()
-
-        card1 = create_modern_card(
-            row,
-            "PlayFair Cipher",
-            "Mã hóa & giải mã bằng thuật toán PlayFair cổ điển.",
-            self.show_playfair
-        )
-        card2 = create_modern_card(
-            row,
-            "RSA Encryption",
-            "Tạo khóa, mã hóa và giải mã bằng RSA hiện đại.",
-            self.show_rsa
-        )
-        card3 = create_modern_card(
-            row,
-            "History",
-            "Xem lại tất cả thao tác mã hóa / giải mã đã thực hiện.",
-            self.show_history
-        )
-
-        card1.grid(row=0, column=0, padx=25)
-        card2.grid(row=0, column=1, padx=25)
-        card3.grid(row=0, column=2, padx=25)
+        create_small_feature(features_box, "PlayFair", "", self.show_playfair)
+        create_small_feature(features_box, "RSA", "", self.show_rsa)
+        create_small_feature(features_box, "History", "", self.show_history)
 
 
     # ------------------ Trang PlayFair ------------------

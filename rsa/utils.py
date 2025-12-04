@@ -2,7 +2,6 @@ import random
 from math import gcd
 
 def is_prime(n, k=5):
-    """Kiểm tra số nguyên tố (Miller-Rabin)"""
     if n < 2: return False
     for p in [2,3,5,7,11,13,17,19,23,29,31]:
         if n % p == 0: return n == p
@@ -23,7 +22,6 @@ def is_prime(n, k=5):
     return True
 
 def modinv(a, m):
-    """Tìm modulo inverse: a*x ≡ 1 (mod m)"""
     g, x, y = extended_gcd(a, m)
     if g != 1:
         raise Exception('No modular inverse')
