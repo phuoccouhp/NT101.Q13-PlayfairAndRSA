@@ -299,19 +299,39 @@ class RSAScreen(Frame):
 
     def choose_file(self):
         path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")])
-        if not path:
-            return
-        with open(path, "r", encoding="utf-8") as f:
-            data = f.read()
+        if path:
+            text = None
+
+            # Thử đọc UTF-8
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    text = f.read()
+            except UnicodeDecodeError:
+                pass
+
+            # Nếu UTF-8 lỗi → thử UTF-16
+            if text is None:
+                try:
+                    with open(path, "r", encoding="utf-16") as f:
+                        text = f.read()
+                except UnicodeDecodeError:
+                    pass
+
+            # Nếu vẫn lỗi → thử ANSI (Windows-1252)
+            if text is None:
+                try:
+                    with open(path, "r", encoding="cp1252") as f:
+                        text = f.read()
+                except:
+                    text = "Không thể đọc file — định dạng không hỗ trợ."
         
-        self.newline_positions = [i for i, c in enumerate(data) if c == "\n"]
+        self.newline_positions = [i for i, c in enumerate(text) if c == "\n"]
         
-        display_data = data.replace("\n", " ")
+        display_data = text.replace("\n", " ")
         self.input_text.delete(0, END)
         self.input_text.insert(0, display_data)
 
     def restore_newlines(self, text):
-        """Chèn ký tự xuống dòng vào các vị trí đã lưu"""
         text_list = list(text)
         for offset, pos in enumerate(self.newline_positions):
             if pos + offset <= len(text_list):

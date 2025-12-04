@@ -1,5 +1,6 @@
 from tkinter import *
 from tkinter import ttk, filedialog
+from tkinter import messagebox
 from playfair.cipher import encrypt_playfair, decrypt_playfair
 import random, string
 
@@ -134,18 +135,78 @@ class PlayFairScreen(Frame):
         Button(clear_all_frame, text="Xóa tất cả", **self.btn_red_style, command=self.clear_all).pack(anchor="e")
 
     # ====================== CHỨC NĂNG ======================
-    def choose_file(self, entry_widget):
-        path = filedialog.askopenfilename(filetypes=[("Text Files","*.txt"),("All Files","*.*")])
-        if path:
-            with open(path,"r", encoding="utf-8") as f:
-                entry_widget.delete(0, END)
-                entry_widget.insert(0,f.read())
+
+    def tokenize_text(self, raw):
+        tokens = []
+        buffer = ""
+
+        def flush_buffer():
+            nonlocal buffer
+            if buffer:
+                tokens.append((buffer, "word"))
+                buffer = ""
+
+        for c in raw:
+            if c.isalnum():            
+                buffer += c
+            else:
+                flush_buffer()
+                if c == " ":
+                    tokens.append((" ", "space"))
+                elif c == "\n":
+                    tokens.append(("\n", "newline"))
+                else:
+                    tokens.append((c, "other"))
+
+        flush_buffer()
+        return tokens
+
+
+    def restore_format(self, tokens, encoded_words):
+        result = []
+        idx = 0
+        for tok, typ in tokens:
+            if typ == "word":
+                result.append(encoded_words[idx])
+                idx += 1
+            else:
+                result.append(tok)
+        return "".join(result)
+    
 
     def save_file(self, entry_widget):
-        path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files","*.txt")])
+        path = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
         if path:
-            with open(path,"w", encoding="utf-8") as f:
+            with open(path, "w", encoding="utf-8") as f:
                 f.write(entry_widget.get())
+            messagebox.showinfo("OK", "Đã lưu file thành công!")
+
+    def choose_file(self, entry_widget):
+        path = filedialog.askopenfilename(
+            filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")]
+        )
+        if not path:
+            return
+
+        text = None
+        for enc in ["utf-8", "utf-16", "cp1252"]:
+            try:
+                with open(path, "r", encoding=enc) as f:
+                    text = f.read()
+                break
+            except:
+                continue
+
+        if text is None:
+            messagebox.showerror("Lỗi", "Không thể đọc file!")
+            return
+
+        self.tokens_encrypt = self.tokenize_text(text)
+        entry_widget.delete(0, END)
+        entry_widget.insert(0, text)
 
     def clear_tab(self, inp, out):
         inp.delete(0, END)
@@ -160,58 +221,89 @@ class PlayFairScreen(Frame):
         for widget in self.matrix_cells_frame.winfo_children():
             widget.destroy()
 
+
+    # ================= MÃ HÓA - GIẢI MÃ ====================
     def encrypt(self):
         key = self.key_entry.get()
-        text = self.input_encrypt.get()
+        raw_text = self.input_encrypt.get()
         mode = self.matrix_mode.get()
-        size = 5 if mode=="5 x 5" else 6
+        size = 5 if mode == "5 x 5" else 6
 
-        if not key or not text:
+        if not key or not raw_text:
             self.output_encrypt.delete(0, END)
-            self.output_encrypt.insert(0,"Thiếu dữ liệu!")
+            self.output_encrypt.insert(0, "Thiếu dữ liệu!")
             return
-        
-        matrix = self.generate_matrix(key, size*size)
 
-        valid, invalid_char = self.validate_input(text, matrix)
+
+        self.tokens_encrypt = self.tokenize_text(raw_text)
+
+        words = [tok for tok, t in self.tokens_encrypt if t == "word"]
+
+        joined = "".join(words)
+
+        matrix = self.generate_matrix(key, size * size)
+        valid, invalid_char = self.validate_input(joined, matrix)
         if not valid:
             self.output_encrypt.delete(0, END)
-            self.output_encrypt.insert(0,f"Ký tự '{invalid_char}' không hợp lệ với ma trận {mode}!")
+            self.output_encrypt.insert(
+                0, f"Ký tự '{invalid_char}' không hợp lệ với ma trận {mode}!")
             return
 
-        try:
-            self.output_encrypt.delete(0, END)
-            cipher, x_pos = encrypt_playfair(text, key, size=size)
-            self.x_positions_enc = x_pos  
-            self.output_encrypt.insert(0, cipher)
-        except Exception as e:
-            self.output_encrypt.insert(0,str(e))
+        cipher, x_pos = encrypt_playfair(joined, key, size=size)
+        self.x_positions_enc = x_pos
+
+        encoded_words = []
+        idx = 0
+        for tok, typ in self.tokens_encrypt:
+            if typ == "word":
+                length = len(tok)
+                encoded_words.append(cipher[idx:idx + length])
+                idx += length
+
+        final = self.restore_format(self.tokens_encrypt, encoded_words)
+
+        self.output_encrypt.delete(0, END)
+        self.output_encrypt.insert(0, final)
+
 
     def decrypt(self):
         key = self.key_entry.get()
-        text = self.input_decrypt.get()
+        raw_text = self.input_decrypt.get()
         mode = self.matrix_mode.get()
-        size = 5 if mode=="5 x 5" else 6
+        size = 5 if mode == "5 x 5" else 6
 
-        if not key or not text:
+        if not key or not raw_text:
             self.output_decrypt.delete(0, END)
-            self.output_decrypt.insert(0,"Thiếu dữ liệu!")
+            self.output_decrypt.insert(0, "Thiếu dữ liệu!")
             return
-        
-        matrix = self.generate_matrix(key, size*size)
 
-        valid, invalid_char = self.validate_input(text, matrix)
+        self.tokens_decrypt = self.tokenize_text(raw_text)
+        words = [tok for tok, t in self.tokens_decrypt if t == "word"]
+        joined = "".join(words)
+
+        matrix = self.generate_matrix(key, size * size)
+        valid, invalid_char = self.validate_input(joined, matrix)
         if not valid:
             self.output_decrypt.delete(0, END)
-            self.output_decrypt.insert(0,f"Ký tự '{invalid_char}' không hợp lệ với ma trận {mode}!")
+            self.output_decrypt.insert(
+                0, f"Ký tự '{invalid_char}' không hợp lệ với ma trận {mode}!")
             return
 
-        try:
-            self.output_decrypt.delete(0, END)
-            result = decrypt_playfair(text, key, size=size, added_x_positions=self.x_positions_enc)
-            self.output_decrypt.insert(0, result)
-        except Exception as e:
-            self.output_decrypt.insert(0,str(e))
+        plain = decrypt_playfair(joined, key, size=size,
+                                 added_x_positions=self.x_positions_enc)
+
+        decoded_words = []
+        idx = 0
+        for tok, typ in self.tokens_decrypt:
+            if typ == "word":
+                length = len(tok)
+                decoded_words.append(plain[idx:idx + length])
+                idx += length
+
+        final = self.restore_format(self.tokens_decrypt, decoded_words)
+
+        self.output_decrypt.delete(0, END)
+        self.output_decrypt.insert(0, final)
 
 
     def reverse_output(self, input_widget, output_widget):
@@ -222,9 +314,6 @@ class PlayFairScreen(Frame):
 
         output_widget.delete(0, END)
 
-        # =============================
-        #  CẬP NHẬT CHO TAB CÒN LẠI
-        # =============================
 
         if input_widget == self.input_encrypt:
             self.input_decrypt.delete(0, END)
