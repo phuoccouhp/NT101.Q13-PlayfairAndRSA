@@ -152,7 +152,7 @@ class MainMenu(Frame):
         sidebar.add_button("Home", self.show_home)
         sidebar.add_button("PlayFair", self.show_playfair)
         sidebar.add_button("RSA", self.show_rsa)
-        sidebar.add_button("History", self.show_history)
+        # sidebar.add_button("History", self.show_history)
 
         self.content = Frame(self, bg="#d9d9d9")
         self.content.pack(side=LEFT, fill=BOTH, expand=True)
@@ -231,15 +231,15 @@ class MainMenu(Frame):
         def create_small_feature(parent, title, desc, command):
             card = Frame(parent, bg="white", width=200, height=60, highlightthickness=1, highlightbackground="#cfcfcf")
             card.pack_propagate(False)
-            card.pack(pady=30, padx=30)
+            #card.pack(pady=(60,50), padx=30)
 
             btn = Button(card, text=title, command=command, font=("Segoe UI", 12, "bold"))
             btn.pack(fill=BOTH, expand=True, padx=6, pady=6)
             return card
 
-        create_small_feature(features_box, "PlayFair", "", self.show_playfair)
-        create_small_feature(features_box, "RSA", "", self.show_rsa)
-        create_small_feature(features_box, "History", "", self.show_history)
+        create_small_feature(features_box, "PlayFair", "", self.show_playfair, ).pack(pady=(40,20), padx=30, expand=True)
+        create_small_feature(features_box, "RSA", "", self.show_rsa, ).pack(pady=(20,40), padx=30, expand=True)
+        # create_small_feature(features_box, "History", "", self.show_history)
 
 
     # ------------------ Trang PlayFair ------------------
