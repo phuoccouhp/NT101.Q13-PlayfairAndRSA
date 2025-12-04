@@ -278,58 +278,68 @@ class RSAScreen(Frame):
         if not self.public_key:
             return messagebox.showerror("Lỗi", "Chưa có khóa công khai!")
 
-        text = self.input_text.get()
+        text = self.input_text.get().strip()
         if not text:
             return messagebox.showerror("Lỗi", "Chưa nhập văn bản!")
 
         try:
             if self.current_tab == "encrypt":
-                cipher = encrypt(text, self.public_key)
-                result = str(cipher)  
-            else:
-                cipher = eval(text)  
-                result = decrypt(cipher, self.private_key)
-        except Exception as e:
-            return messagebox.showerror("Lỗi", f"Không thể xử lý: {e}")
+                # ——— MÃ HÓA ———
+                cipher_list = encrypt(text, self.public_key)
 
+                # Lưu dạng chuỗi phân tách dấu cách
+                result = " ".join(str(x) for x in cipher_list)
+
+            else:
+                # ——— GIẢI MÃ ———
+                raw = text.replace("\n", " ").strip()
+
+                # Chuyển chuỗi → list số
+                cipher_list = [int(x) for x in raw.split()]
+
+                # Giải mã
+                result = decrypt(cipher_list, self.private_key)
+
+        except Exception as e:
+            return messagebox.showerror("Lỗi", f"Định dạng văn bản không hợp lệ!")
 
         self.result_text.delete(0, END)
-        display_result = str(result).replace("\n", " ")
-        self.result_text.insert(0, display_result)
+        self.result_text.insert(0, result)
+
 
     def choose_file(self):
-        path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt"), ("All Files", "*.*")])
-        if path:
-            text = None
+        path = filedialog.askopenfilename(filetypes=[("Text Files","*.txt")])
+        if not path:
+            return
 
-            # Thử đọc UTF-8
+        text = None
+
+        # UTF-8
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                text = f.read()
+        except:
+            pass
+
+        # UTF-16
+        if text is None:
             try:
-                with open(path, "r", encoding="utf-8") as f:
+                with open(path, "r", encoding="utf-16") as f:
                     text = f.read()
-            except UnicodeDecodeError:
+            except:
                 pass
 
-            # Nếu UTF-8 lỗi → thử UTF-16
-            if text is None:
-                try:
-                    with open(path, "r", encoding="utf-16") as f:
-                        text = f.read()
-                except UnicodeDecodeError:
-                    pass
+        # ANSI
+        if text is None:
+            try:
+                with open(path, "r", encoding="cp1252") as f:
+                    text = f.read()
+            except:
+                text = ""
 
-            # Nếu vẫn lỗi → thử ANSI (Windows-1252)
-            if text is None:
-                try:
-                    with open(path, "r", encoding="cp1252") as f:
-                        text = f.read()
-                except:
-                    text = "Không thể đọc file — định dạng không hỗ trợ."
-        
-        self.newline_positions = [i for i, c in enumerate(text) if c == "\n"]
-        
-        display_data = text.replace("\n", " ")
         self.input_text.delete(0, END)
-        self.input_text.insert(0, display_data)
+        self.input_text.insert(0, text.strip())
+
 
     def restore_newlines(self, text):
         text_list = list(text)
@@ -343,17 +353,18 @@ class RSAScreen(Frame):
         if not data:
             return messagebox.showerror("Lỗi", "Không có dữ liệu để lưu!")
 
-        data_with_newlines = self.restore_newlines(data)
-
-        path = filedialog.asksaveasfilename(defaultextension=".txt",
-                                            filetypes=[("Text Files", "*.txt")])
+        path = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            filetypes=[("Text Files", "*.txt")]
+        )
         if not path:
             return
 
         with open(path, "w", encoding="utf-8") as f:
-            f.write(data_with_newlines)
+            f.write(data)
 
         messagebox.showinfo("OK", "Đã lưu file thành công!")
+
 
     def clear_all(self):
         self.clear_cipher()   
