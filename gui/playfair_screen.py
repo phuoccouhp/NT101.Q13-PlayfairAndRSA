@@ -1,167 +1,296 @@
 from tkinter import *
+from tkinter import ttk, filedialog
 from playfair.cipher import encrypt_playfair, decrypt_playfair
-import json
-import os
-from datetime import datetime
+import random, string
 
 class PlayFairScreen(Frame):
     def __init__(self, master):
-        super().__init__(master, bg="#d9d9d9")
+        super().__init__(master, bg="#f4f4f4")
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
-        # Tiêu đề
-        Label(self, text="Mã hóa và giải mã PlayFair", bg="#d9d9d9", fg="black",
-              font=("Segoe UI", 18, "bold")).pack(pady=20)
+        self.x_positions_enc = []
+        self.x_positions_dec = []
 
-        # Frame chứa nội dung chính
-        content = Frame(self, bg="#d9d9d9")
-        content.pack(pady=10)
+        # ====================== TIÊU ĐỀ ======================
+        Label(self, text="PlayFair", bg="#f4f4f4", font=("Segoe UI", 22, "bold")).grid(
+            row=0, column=0, columnspan=2, sticky="w", padx=30, pady=(10,5)
+        )
 
-        # Từ khóa
-        Label(content, text="Từ khóa:", bg="#d9d9d9", font=("Segoe UI", 12)).grid(row=0, column=0, sticky=E, padx=10, pady=8)
-        self.key_entry = Entry(content, width=45, font=("Segoe UI", 12))
-        self.key_entry.grid(row=0, column=1, pady=8)
+        # ==================== KHUNG TRÁI (KHÓA) ======================
+        key_frame = LabelFrame(
+            self, text="KHÓA",
+            font=("Segoe UI", 12, "bold"),
+            bg="white", labelanchor="nw",
+            padx=20, pady=20
+        )
+        key_frame.grid(row=1, column=0, sticky="nsew", padx=(20,10), pady=10)
+        key_frame.grid_columnconfigure(0, weight=1)
 
-        # Văn bản đầu vào
-        Label(content, text="Văn bản:", bg="#d9d9d9", font=("Segoe UI", 12)).grid(row=1, column=0, sticky=E, padx=10, pady=8)
-        self.input_text = Entry(content, width=45, font=("Segoe UI", 12))
-        self.input_text.grid(row=1, column=1, pady=8)
+        Label(key_frame, text="Từ khóa:", bg="white", font=("Segoe UI", 11)).grid(
+            row=0, column=0, sticky="w", pady=(0,5)
+        )
+        self.key_entry = Entry(key_frame, font=("Segoe UI",11), bd=1, relief="solid")
+        self.key_entry.grid(row=1, column=0, sticky="ew", ipady=4)
 
-        # Kết quả (Entry readonly để có thể copy)
-        Label(content, text="Kết quả:", bg="#d9d9d9", font=("Segoe UI", 12)).grid(row=2, column=0, sticky=E, padx=10, pady=8)
-        self.result_entry = Entry(content, width=45, font=("Segoe UI", 12), justify="center",
-                                  state="readonly", fg="blue", readonlybackground="white")
-        self.result_entry.grid(row=2, column=1, pady=8)
+        # ===== STYLE NÚT =====
+        self.btn_style = {
+            "font": ("Segoe UI", 11, "bold"),
+            "relief": "solid",
+            "bd": 1,
+            "highlightthickness": 0,
+            "height": 1,
+            "width": 14,
+            "cursor": "hand2"
+        }
 
-        # Frame chứa nút
-        button_frame = Frame(self, bg="#d9d9d9")
-        button_frame.pack(pady=15)
+        self.btn_red_style = self.btn_style.copy()
+        self.btn_red_style.update({"bg": "#d32f2f", "fg": "white"})
 
-        Button(button_frame, text="Mã hóa", command=self.encrypt,
-               font=("Segoe UI", 12, "bold"), width=12, bg="#4CAF50", fg="white").pack(side=LEFT, padx=15)
-        Button(button_frame, text="Giải mã", command=self.decrypt,
-               font=("Segoe UI", 12, "bold"), width=12, bg="#2196F3", fg="white").pack(side=LEFT, padx=15)
-        Button(button_frame, text="Xóa", command=self.clear_fields,
-               font=("Segoe UI", 12, "bold"), width=12,bg="#f44336", fg="white").pack(side=LEFT, padx=10)
-        Button(button_frame, text="Lưu", command=self.save_history,
-               font=("Segoe UI", 12, "bold"), width=12, bg="#FF9800", fg="white").pack(side=LEFT, padx=10)
+        btn_frame = Frame(key_frame, bg="white")
+        btn_frame.grid(row=2, column=0, sticky="e", pady=10)
 
-    # ====== Xử lý nút ======
+        Button(btn_frame, text="Khóa ngẫu nhiên", **self.btn_style, command=self.random_key).grid(row=0,column=0,padx=5)
+        Button(btn_frame, text="Xóa khóa", **self.btn_red_style, command=lambda: self.key_entry.delete(0, END)).grid(row=0,column=1,padx=5)
+
+        # ==================== KHUNG PHẢI (MA TRẬN) ======================
+        matrix_frame = LabelFrame(
+            self, text="MA TRẬN",
+            font=("Segoe UI", 12, "bold"),
+            bg="white", labelanchor="nw",
+            padx=10, pady=10
+        )
+        matrix_frame.grid(row=1, column=1, sticky="nsew", padx=(10,20), pady=10)
+        matrix_frame.grid_columnconfigure(0, weight=1)
+
+        Label(matrix_frame, text="Chế độ ma trận:", bg="white", font=("Segoe UI",11)).grid(row=0,column=0, sticky="w")
+        self.matrix_mode = ttk.Combobox(matrix_frame, values=["5 x 5","6 x 6"], state="readonly", font=("Segoe UI",11))
+        self.matrix_mode.current(0)
+        self.matrix_mode.grid(row=1,column=0, sticky="ew", ipady=3)
+
+        Button(matrix_frame, text="Tạo ma trận", **self.btn_style, command=self.update_matrix_from_key).grid(row=1,column=1,padx=10)
+
+        # Khung chứa ô ma trận
+        self.matrix_cells_frame = Frame(matrix_frame, bg="white")
+        self.matrix_cells_frame.grid(row=2,column=0, pady=10, columnspan=2)
+
+        # ================= KHUNG MÃ HÓA - GIẢI MÃ =================
+        bottom_frame = LabelFrame(self, text="MÃ HÓA - GIẢI MÃ", font=("Segoe UI",12,"bold"),
+                                  bg="white", labelanchor="nw", padx=20, pady=10)
+        bottom_frame.grid(row=2,column=0,columnspan=2, sticky="nsew", padx=20, pady=(0,10))
+        bottom_frame.grid_columnconfigure(0, weight=1)
+        bottom_frame.grid_rowconfigure(1, weight=1)
+
+        notebook = ttk.Notebook(bottom_frame)
+        notebook.grid(row=0,column=0, sticky="nsew", pady=5)
+
+        tab_encrypt = Frame(notebook, bg="white")
+        tab_decrypt = Frame(notebook, bg="white")
+        notebook.add(tab_encrypt, text="Mã hóa")
+        notebook.add(tab_decrypt, text="Giải mã")
+
+        # =================== TAB MÃ HÓA =======================
+        tab_encrypt.grid_columnconfigure(0, weight=50)
+        tab_encrypt.grid_columnconfigure(1, weight=1)
+
+        Label(tab_encrypt, text="Văn bản:", bg="white", font=("Segoe UI",11)).grid(row=0,column=0, sticky="w")
+        self.input_encrypt = Entry(tab_encrypt, font=("Segoe UI",11), bd=1, relief="solid")
+        self.input_encrypt.grid(row=1,column=0, sticky="ew", ipady=4, pady=5)
+        Button(tab_encrypt, text="Chọn File", **self.btn_style, command=lambda: self.choose_file(self.input_encrypt)).grid(row=1,column=1,padx=5, sticky="e")
+
+        Label(tab_encrypt, text="Kết quả:", bg="white", font=("Segoe UI",11)).grid(row=2,column=0, sticky="w")
+        self.output_encrypt = Entry(tab_encrypt, font=("Segoe UI",11), bd=1, relief="solid", fg="black")
+        self.output_encrypt.grid(row=3,column=0, sticky="ew", ipady=4, pady=5)
+        Button(tab_encrypt, text="Lưu File", **self.btn_style, command=lambda: self.save_file(self.output_encrypt)).grid(row=3,column=1,padx=5, sticky="e")
+
+        action_frame_enc = Frame(tab_encrypt, bg="white")
+        action_frame_enc.grid(row=4,column=0,columnspan=3, sticky="e", pady=10)
+        Button(action_frame_enc, text="Mã hóa", **self.btn_style, command=self.encrypt).grid(row=0,column=0,padx=5)
+        Button(action_frame_enc, text="Đảo ngược", **self.btn_style, command=lambda:self.reverse_output(self.input_encrypt,self.output_encrypt)).grid(row=0,column=1,padx=5)
+        Button(action_frame_enc, text="Xóa", **self.btn_red_style, command=lambda:self.clear_tab(self.input_encrypt,self.output_encrypt)).grid(row=0,column=2,padx=5)
+
+        # =================== TAB GIẢI MÃ =======================
+        tab_decrypt.grid_columnconfigure(0, weight=50)
+        tab_decrypt.grid_columnconfigure(1, weight=1)
+        Label(tab_decrypt, text="Văn bản:", bg="white", font=("Segoe UI",11)).grid(row=0,column=0, sticky="w")
+        self.input_decrypt = Entry(tab_decrypt, font=("Segoe UI",11), bd=1, relief="solid")
+        self.input_decrypt.grid(row=1,column=0, sticky="ew", ipady=4, pady=5)
+        Button(tab_decrypt, text="Chọn File", **self.btn_style, command=lambda: self.choose_file(self.input_decrypt)).grid(row=1,column=1,padx=5, sticky="e")
+
+        Label(tab_decrypt, text="Kết quả:", bg="white", font=("Segoe UI",11)).grid(row=2,column=0, sticky="w")
+        self.output_decrypt = Entry(tab_decrypt, font=("Segoe UI",11), bd=1, relief="solid", fg="black")
+        self.output_decrypt.grid(row=3,column=0, sticky="ew", ipady=4, pady=5)
+        Button(tab_decrypt, text="Lưu File", **self.btn_style, command=lambda: self.save_file(self.output_decrypt)).grid(row=3,column=1,padx=5, sticky="e")
+
+        action_frame_dec = Frame(tab_decrypt, bg="white")
+        action_frame_dec.grid(row=4,column=0,columnspan=3, sticky="e", pady=10)
+        Button(action_frame_dec, text="Giải mã", **self.btn_style, command=self.decrypt).grid(row=0,column=0,padx=5)
+        Button(action_frame_dec, text="Đảo ngược", **self.btn_style, command=lambda:self.reverse_output(self.input_decrypt,self.output_decrypt)).grid(row=0,column=1,padx=5)
+        Button(action_frame_dec, text="Xóa", **self.btn_red_style, command=lambda:self.clear_tab(self.input_decrypt,self.output_decrypt)).grid(row=0,column=2,padx=5)
+
+        # ================= NÚT XÓA TẤT CẢ DƯỚI CÙNG BÊN PHẢI =================
+        clear_all_frame = Frame(self, bg="#f4f4f4")
+        clear_all_frame.grid(row=3, column=1, sticky="e", padx=20, pady=(0,20))
+        Button(clear_all_frame, text="Xóa tất cả", **self.btn_red_style, command=self.clear_all).pack(anchor="e")
+
+    # ====================== CHỨC NĂNG ======================
+    def choose_file(self, entry_widget):
+        path = filedialog.askopenfilename(filetypes=[("Text Files","*.txt"),("All Files","*.*")])
+        if path:
+            with open(path,"r", encoding="utf-8") as f:
+                entry_widget.delete(0, END)
+                entry_widget.insert(0,f.read())
+
+    def save_file(self, entry_widget):
+        path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files","*.txt")])
+        if path:
+            with open(path,"w", encoding="utf-8") as f:
+                f.write(entry_widget.get())
+
+    def clear_tab(self, inp, out):
+        inp.delete(0, END)
+        out.delete(0, END)
+
+    def clear_all(self):
+        self.key_entry.delete(0, END)
+        self.input_encrypt.delete(0, END)
+        self.output_encrypt.delete(0, END)
+        self.input_decrypt.delete(0, END)
+        self.output_decrypt.delete(0, END)
+        for widget in self.matrix_cells_frame.winfo_children():
+            widget.destroy()
+
     def encrypt(self):
-        text = self.input_text.get()
         key = self.key_entry.get()
+        text = self.input_encrypt.get()
+        mode = self.matrix_mode.get()
+        size = 5 if mode=="5 x 5" else 6
 
-        if not text or not key:
-            self._set_result("⚠️ Vui lòng nhập đầy đủ văn bản và khóa!")
+        if not key or not text:
+            self.output_encrypt.delete(0, END)
+            self.output_encrypt.insert(0,"Thiếu dữ liệu!")
+            return
+        
+        matrix = self.generate_matrix(key, size*size)
+
+        # Kiểm tra đầu vào
+        valid, invalid_char = self.validate_input(text, matrix)
+        if not valid:
+            self.output_encrypt.delete(0, END)
+            self.output_encrypt.insert(0,f"Ký tự '{invalid_char}' không hợp lệ với ma trận {mode}!")
             return
 
         try:
-            result = encrypt_playfair(text, key)
-            self._set_result(result)
+            self.output_encrypt.delete(0, END)
+            # Gọi encrypt_playfair trả về cả ciphertext và danh sách X
+            cipher, x_pos = encrypt_playfair(text, key, size=size)
+            self.x_positions_enc = x_pos  # lưu vị trí X
+            self.output_encrypt.insert(0, cipher)
         except Exception as e:
-            self._set_result(f"Lỗi: {str(e)}")
+            self.output_encrypt.insert(0,str(e))
 
     def decrypt(self):
-        text = self.input_text.get()
         key = self.key_entry.get()
+        text = self.input_decrypt.get()
+        mode = self.matrix_mode.get()
+        size = 5 if mode=="5 x 5" else 6
 
-        if not text or not key:
-            self._set_result("⚠️ Vui lòng nhập đầy đủ văn bản và khóa!")
+        if not key or not text:
+            self.output_decrypt.delete(0, END)
+            self.output_decrypt.insert(0,"Thiếu dữ liệu!")
+            return
+        
+        matrix = self.generate_matrix(key, size*size)
+
+        # Kiểm tra đầu vào
+        valid, invalid_char = self.validate_input(text, matrix)
+        if not valid:
+            self.output_decrypt.delete(0, END)
+            self.output_decrypt.insert(0,f"Ký tự '{invalid_char}' không hợp lệ với ma trận {mode}!")
             return
 
         try:
-            result = decrypt_playfair(text, key)
-            self._set_result(result)
+            self.output_decrypt.delete(0, END)
+            # Dùng danh sách X đã lưu khi encrypt để bỏ X padding
+            result = decrypt_playfair(text, key, size=size, added_x_positions=self.x_positions_enc)
+            self.output_decrypt.insert(0, result)
         except Exception as e:
-            self._set_result(f"Lỗi: {str(e)}")
-    
-    def clear_fields(self):
-        """Làm sạch tất cả ô nhập và kết quả"""
-        self.key_entry.delete(0, END)
-        self.input_text.delete(0, END)
-        self._set_result("")
+            self.output_decrypt.insert(0,str(e))
 
-    def _set_result(self, text):
-        """Cập nhật Entry readonly kết quả"""
-        self.result_entry.config(state="normal")
-        self.result_entry.delete(0, END)
-        self.result_entry.insert(0, text)
-        self.result_entry.config(state="readonly")
 
-    def save_history(self, algo_type="PlayFair"):
-        text = self.input_text.get()
-        key = self.key_entry.get()
+    def reverse_output(self, input_widget, output_widget):
+        text_out = output_widget.get()
 
-        # Lấy giá trị từ Entry readonly
-        self.result_entry.config(state="normal")
-        result = self.result_entry.get()
-        self.result_entry.config(state="readonly")
+        input_widget.delete(0, END)
+        input_widget.insert(0, text_out)
 
-        if not text or not key or not result:
-            self._set_result("⚠️ Không có dữ liệu để lưu!")
-            return
+        output_widget.delete(0, END)
 
-        # ======= HỘP NHẬP TÊN TÙY CHỈNH =======
-        dialog = Toplevel(self)
-        dialog.title("Nhập tên bản ghi")
-        dialog.configure(bg="#f0f0f0")
-        dialog.resizable(False, False)
+        # =============================
+        #  CẬP NHẬT CHO TAB CÒN LẠI
+        # =============================
 
-        w, h = 420, 200
-        self.update_idletasks()
-        x = self.winfo_rootx() + (self.winfo_width() - w) // 2
-        y = self.winfo_rooty() + (self.winfo_height() - h) // 2
-        dialog.geometry(f"{w}x{h}+{x}+{y}")
-        dialog.grab_set()  # Khóa focus
+        if input_widget == self.input_encrypt:
+            self.input_decrypt.delete(0, END)
+            self.input_decrypt.insert(0, text_out)
 
-        Label(dialog, text="Vui lòng nhập tên cho bản ghi:", 
-              font=("Segoe UI", 12), bg="#f0f0f0").pack(pady=15)
-
-        name_var = StringVar()
-        entry = Entry(dialog, textvariable=name_var, font=("Segoe UI", 12), width=35, justify="center")
-        entry.pack(pady=5)
-        entry.focus()
-
-        btn_frame = Frame(dialog, bg="#f0f0f0")
-        btn_frame.pack(pady=15)
-
-        def confirm():
-            name = name_var.get().strip()
-            if not name:
-                Label(dialog, text="⚠️ Vui lòng nhập tên!", 
-                      font=("Segoe UI", 10), fg="red", bg="#f0f0f0").pack()
-            else:
-                dialog.destroy()
-                self._save_to_file(name, text, key, result, algo_type)
-
-        Button(btn_frame, text="Lưu", command=confirm,
-               font=("Segoe UI", 11, "bold"), bg="#4CAF50", fg="white", width=10).pack(side=LEFT, padx=10)
-        Button(btn_frame, text="Hủy", command=dialog.destroy,
-               font=("Segoe UI", 11, "bold"), bg="#f44336", fg="white", width=10).pack(side=LEFT, padx=10)
-
-    def _save_to_file(self, name, text, key, result, algo_type):
-        """Lưu dữ liệu lịch sử ra file"""
-        history_file = os.path.join("data", "history.json")
-        os.makedirs(os.path.dirname(history_file), exist_ok=True)
-
-        if os.path.exists(history_file):
-            with open(history_file, "r", encoding="utf-8") as f:
-                try:
-                    history = json.load(f)
-                except json.JSONDecodeError:
-                    history = []
+            self.output_decrypt.delete(0, END)
+        
         else:
-            history = []
+            self.input_encrypt.delete(0, END)
+            self.input_encrypt.insert(0, text_out)
 
-        history.append({
-            "name": name,
-            "text": text,
-            "key": key,
-            "result": result,
-            "type": algo_type,
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        })
+            self.output_encrypt.delete(0, END)
 
-        with open(history_file, "w", encoding="utf-8") as f:
-            json.dump(history, f, ensure_ascii=False, indent=4)
+    def validate_input(self, text, matrix):
+        size = len(matrix)
+        allowed_chars = set()
+        if size == 25:
+            allowed_chars = set("abcdefghiklmnopqrstuvwxyz")  # Không có j
+        else:
+            allowed_chars = set("abcdefghijklmnopqrstuvwxyz0123456789")
+        for ch in text.lower().replace("j",""):  # Chuyển j->i nếu 5x5
+            if ch.isalnum() and ch not in allowed_chars:
+                return False, ch
+        return True, ""
 
-        self._set_result("✅ Đã lưu lịch sử thành công!")
+    # ================= MA TRẬN PLAYFAIR ====================
+    def generate_matrix(self, key, size):
+        key = key.lower().replace("j","")
+        matrix=[]
+        used=set()
+        for ch in key:
+            if ch.isalnum() and ch not in used:
+                used.add(ch)
+                matrix.append(ch)
+        alphabet = "abcdefghiklmnopqrstuvwxyz" if size==25 else "abcdefghijklmnopqrstuvwxyz0123456789"
+        for ch in alphabet:
+            if ch not in used:
+                used.add(ch)
+                matrix.append(ch)
+        return matrix
+
+    def show_matrix(self, matrix, size):
+        for widget in self.matrix_cells_frame.winfo_children():
+            widget.destroy()
+        n = 5 if size==25 else 6
+        index = 0
+        for r in range(n):
+            for c in range(n):
+                Label(self.matrix_cells_frame, text=matrix[index].upper(),
+                      width=3, height=1, font=("Segoe UI",10,"bold"),
+                      bd=1, relief="solid", bg="white").grid(row=r,column=c,padx=1,pady=1)
+                index +=1
+
+    def update_matrix_from_key(self):
+        key = self.key_entry.get()
+        mode = self.matrix_mode.get()
+        size = 25 if mode=="5 x 5" else 36
+        matrix = self.generate_matrix(key, size)
+        self.show_matrix(matrix, size)
+
+    def random_key(self):
+        letters = string.ascii_lowercase.replace("j","")
+        key = "".join(random.sample(letters,10))
+        self.key_entry.delete(0, END)
+        self.key_entry.insert(0,key)

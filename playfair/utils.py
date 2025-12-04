@@ -1,17 +1,18 @@
-def prepare_text(text):
-    """
-    Làm sạch chuỗi, loại bỏ ký tự không phải chữ cái, viết hoa, và thay J -> I.
-    """
-    text = ''.join([c.upper() for c in text if c.isalpha()])
-    text = text.replace('J', 'I')
-    return text
+# playfair/utils.py
+
+def prepare_text(text, size=5):
+    """Chuẩn hóa văn bản: lowercase, bỏ ký tự không hợp lệ"""
+    text = text.lower()
+    if size == 5:
+        text = text.replace('j','i')
+        return ''.join([c for c in text if c.isalpha()])
+    else:  # 6x6 -> giữ chữ + số
+        return ''.join([c for c in text if c.isalnum()])
 
 
-def generate_key_matrix(keyword):
-    """
-    Tạo ma trận 5x5 từ khóa.
-    """
-    keyword = prepare_text(keyword)
+def generate_key_matrix(keyword, size=5):
+    """Tạo ma trận khóa n x n"""
+    keyword = prepare_text(keyword, size)
     matrix = []
     used = set()
 
@@ -20,21 +21,24 @@ def generate_key_matrix(keyword):
             matrix.append(c)
             used.add(c)
 
-    for c in "ABCDEFGHIKLMNOPQRSTUVWXYZ":  # Không có J
+    if size == 5:
+        alphabet = "abcdefghiklmnopqrstuvwxyz"  # không có j
+    else:
+        alphabet = "abcdefghijklmnopqrstuvwxyz0123456789"
+
+    for c in alphabet:
         if c not in used:
             matrix.append(c)
             used.add(c)
 
-    # Trả về dạng 2D (5x5)
-    return [matrix[i:i + 5] for i in range(0, 25, 5)]
+    return [matrix[i:i+size] for i in range(0, size*size, size)]
 
 
 def find_position(matrix, letter):
-    """
-    Tìm tọa độ (row, col) của một ký tự trong ma trận.
-    """
-    for row in range(5):
-        for col in range(5):
+    """Tìm vị trí letter trong ma trận"""
+    n = len(matrix)
+    for row in range(n):
+        for col in range(n):
             if matrix[row][col] == letter:
                 return row, col
     return None

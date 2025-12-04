@@ -3,7 +3,7 @@ from gui.main_menu import MainMenu
 
 def main():
     root = Tk()
-    root.geometry("1100x600")
+    root.geometry("1220x660")
     root.title("Cryptography Toolkit")
 
     # Hiển thị màn hình main menu

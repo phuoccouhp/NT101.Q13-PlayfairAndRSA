@@ -8,23 +8,53 @@ def generate_prime(bits=16):
         if is_prime(num):
             return num
 
+
 def generate_keys(bits=16):
-    """Tạo khóa RSA (n, e, d)"""
+    """Tạo khóa RSA (n, e, d) và trả thêm p, q"""
     p = generate_prime(bits)
     q = generate_prime(bits)
+
     while q == p:
         q = generate_prime(bits)
-    n = p * q
-    phi = (p-1)*(q-1)
 
-    # chọn e
-    e = 65537  # thường dùng
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    e = 65537
     if gcd(e, phi) != 1:
         e = 3
         while gcd(e, phi) != 1:
             e += 2
 
     d = modinv(e, phi)
+
     public_key = (n, e)
     private_key = (n, d)
-    return public_key, private_key
+
+    return public_key, private_key, p, q
+
+
+def generate_keys_from_pq(p, q):
+    """Sinh khóa từ p, q người dùng nhập"""
+    if not is_prime(p) or not is_prime(q):
+        raise Exception("p hoặc q không phải số nguyên tố!")
+
+    if p == q:
+        raise Exception("p và q không được bằng nhau!")
+
+    n = p * q
+    phi = (p - 1) * (q - 1)
+
+    e = 65537
+    if gcd(e, phi) != 1:
+        e = 3
+        while gcd(e, phi) != 1:
+            e += 2
+
+    d = modinv(e, phi)
+
+    return (n, e), (n, d)
+
+
+
+
