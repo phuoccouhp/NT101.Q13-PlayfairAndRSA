@@ -17,7 +17,7 @@ class RSAScreen(Frame):
         self.private_key = None
         self.newline_positions = []
 
-        # Tự co giãn cột
+
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
 
@@ -292,7 +292,7 @@ class RSAScreen(Frame):
         except Exception as e:
             return messagebox.showerror("Lỗi", f"Không thể xử lý: {e}")
 
-        # Hiển thị kết quả trong Entry một dòng
+
         self.result_text.delete(0, END)
         display_result = str(result).replace("\n", " ")
         self.result_text.insert(0, display_result)
@@ -304,10 +304,8 @@ class RSAScreen(Frame):
         with open(path, "r", encoding="utf-8") as f:
             data = f.read()
         
-        # Lưu vị trí ký tự xuống dòng
         self.newline_positions = [i for i, c in enumerate(data) if c == "\n"]
         
-        # Chuẩn hóa để hiển thị trên Entry (1 dòng)
         display_data = data.replace("\n", " ")
         self.input_text.delete(0, END)
         self.input_text.insert(0, display_data)
@@ -325,7 +323,6 @@ class RSAScreen(Frame):
         if not data:
             return messagebox.showerror("Lỗi", "Không có dữ liệu để lưu!")
 
-        # Khôi phục xuống dòng
         data_with_newlines = self.restore_newlines(data)
 
         path = filedialog.asksaveasfilename(defaultextension=".txt",

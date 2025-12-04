@@ -173,7 +173,6 @@ class PlayFairScreen(Frame):
         
         matrix = self.generate_matrix(key, size*size)
 
-        # Kiểm tra đầu vào
         valid, invalid_char = self.validate_input(text, matrix)
         if not valid:
             self.output_encrypt.delete(0, END)
@@ -182,9 +181,8 @@ class PlayFairScreen(Frame):
 
         try:
             self.output_encrypt.delete(0, END)
-            # Gọi encrypt_playfair trả về cả ciphertext và danh sách X
             cipher, x_pos = encrypt_playfair(text, key, size=size)
-            self.x_positions_enc = x_pos  # lưu vị trí X
+            self.x_positions_enc = x_pos  
             self.output_encrypt.insert(0, cipher)
         except Exception as e:
             self.output_encrypt.insert(0,str(e))
@@ -202,7 +200,6 @@ class PlayFairScreen(Frame):
         
         matrix = self.generate_matrix(key, size*size)
 
-        # Kiểm tra đầu vào
         valid, invalid_char = self.validate_input(text, matrix)
         if not valid:
             self.output_decrypt.delete(0, END)
@@ -211,7 +208,6 @@ class PlayFairScreen(Frame):
 
         try:
             self.output_decrypt.delete(0, END)
-            # Dùng danh sách X đã lưu khi encrypt để bỏ X padding
             result = decrypt_playfair(text, key, size=size, added_x_positions=self.x_positions_enc)
             self.output_decrypt.insert(0, result)
         except Exception as e:
@@ -246,10 +242,10 @@ class PlayFairScreen(Frame):
         size = len(matrix)
         allowed_chars = set()
         if size == 25:
-            allowed_chars = set("abcdefghiklmnopqrstuvwxyz")  # Không có j
+            allowed_chars = set("abcdefghiklmnopqrstuvwxyz")  
         else:
             allowed_chars = set("abcdefghijklmnopqrstuvwxyz0123456789")
-        for ch in text.lower().replace("j",""):  # Chuyển j->i nếu 5x5
+        for ch in text.lower().replace("j",""): 
             if ch.isalnum() and ch not in allowed_chars:
                 return False, ch
         return True, ""

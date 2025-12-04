@@ -1,7 +1,6 @@
 # playfair/utils.py
 
 def prepare_text(text, size=5):
-    """Chuẩn hóa văn bản: lowercase, bỏ ký tự không hợp lệ"""
     text = text.lower()
     if size == 5:
         text = text.replace('j','i')
@@ -11,7 +10,6 @@ def prepare_text(text, size=5):
 
 
 def generate_key_matrix(keyword, size=5):
-    """Tạo ma trận khóa n x n"""
     keyword = prepare_text(keyword, size)
     matrix = []
     used = set()
@@ -35,7 +33,6 @@ def generate_key_matrix(keyword, size=5):
 
 
 def find_position(matrix, letter):
-    """Tìm vị trí letter trong ma trận"""
     n = len(matrix)
     for row in range(n):
         for col in range(n):

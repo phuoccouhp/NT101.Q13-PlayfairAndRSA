@@ -55,10 +55,6 @@ def encrypt_playfair(plaintext, keyword, size=5):
 
 
 def decrypt_playfair(ciphertext, keyword, size=5, added_x_positions=None):
-    """
-    Decrypt ciphertext using Playfair cipher
-    added_x_positions: danh sách vị trí X đã thêm khi mã hóa
-    """
     ciphertext = prepare_text(ciphertext, size)
     matrix = generate_key_matrix(keyword, size)
     n = size

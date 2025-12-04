@@ -80,7 +80,6 @@ class HistoryScreen(Frame):
 
     # ===== Hàm load lịch sử =====
     def load_history(self):
-        """Đọc dữ liệu từ file history.json và hiển thị"""
         self.tree.delete(*self.tree.get_children())
         history_file = os.path.join("data", "history.json")
         if not os.path.exists(history_file):

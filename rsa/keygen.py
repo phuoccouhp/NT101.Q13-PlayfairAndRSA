@@ -10,7 +10,6 @@ def generate_prime(bits=16):
 
 
 def generate_keys(bits=16):
-    """Tạo khóa RSA (n, e, d) và trả thêm p, q"""
     p = generate_prime(bits)
     q = generate_prime(bits)
 
@@ -35,7 +34,6 @@ def generate_keys(bits=16):
 
 
 def generate_keys_from_pq(p, q):
-    """Sinh khóa từ p, q người dùng nhập"""
     if not is_prime(p) or not is_prime(q):
         raise Exception("p hoặc q không phải số nguyên tố!")
 
